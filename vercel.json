@@ -3,11 +3,13 @@
   "builds": [
     {
       "src": "smart-meter-dashboard/package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "smart-meter-dashboard/dist" }
+      "use": "@vercel/node"
     }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "/smart-meter-dashboard/dist/index.html" }
+    {
+      "src": "/(.*)",
+      "dest": "/smart-meter-dashboard/$1"
+    }
   ]
 }
