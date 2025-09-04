@@ -1,0 +1,55 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card-bg, #fff);
+  padding: 0.8rem 1.2rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Left section (menu + title) */
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.navbar-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  color: var(--text-color, #1e293b);
+}
+
+.navbar-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-color, #1e293b);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .navbar {
+    justify-content: center; /* center everything */
+    padding: 0.8rem 1rem;
+  }
+
+  .navbar-left {
+    flex: 1;
+    justify-content: center; /* center menu + title */
+    gap: 0.5rem;
+  }
+
+  .navbar-title {
+    font-size: 1rem;
+  }
+
+  .navbar-btn {
+    position: absolute;
+    left: 1rem; /* keep the menu button at the left */
+  }
+}
