@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaTachometerAlt,
   FaFileInvoiceDollar,
@@ -11,6 +11,7 @@ import "./Sidebar.css";
 
 function Sidebar({ isOpen, toggleSidebar }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeItem, setActiveItem] = useState(location.pathname);
 
   useEffect(() => {
@@ -32,10 +33,16 @@ function Sidebar({ isOpen, toggleSidebar }) {
     }
   };
 
+  // ✅ Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/auth", { replace: true }); // redirect to login
+  };
+
   return (
     <aside className={`sidebar ${isOpen ? "open" : "collapsed"}`}>
       <div className="sidebar-header">
-        <h2 className="logo">{isOpen ? "SmartGrid" : "SG"}</h2>
+        <h2 className="logo">{isOpen ? "Smart meter" : "SG"}</h2>
       </div>
 
       <ul className="sidebar-menu">
@@ -53,17 +60,14 @@ function Sidebar({ isOpen, toggleSidebar }) {
         ))}
       </ul>
 
+      {/* ✅ Logout button */}
       <div className="sidebar-footer">
-        <Link
-          to="/auth"
-          className="sidebar-link"
-          onClick={() => handleMenuClick("/auth")}
-        >
+        <button className="sidebar-link logout-btn" onClick={handleLogout}>
           <span className="icon">
             <FaSignOutAlt />
           </span>
           {isOpen && <span className="label">Logout</span>}
-        </Link>
+        </button>
       </div>
     </aside>
   );

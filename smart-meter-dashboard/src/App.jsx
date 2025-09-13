@@ -7,6 +7,7 @@ import Dashboard from "./components/Dashboard/Dashboard";
 import Billing from "./pages/Billing/Billing";
 import History from "./pages/History/History";
 import Settings from "./pages/Settings/Settings";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function Layout({ children, toggleSidebar, darkMode, toggleDarkMode, sidebarOpen }) {
   return (
@@ -48,13 +49,16 @@ function App() {
         <Route
           path="/dashboard"
           element={
+
             <Layout
               toggleSidebar={toggleSidebar}
               darkMode={darkMode}
               toggleDarkMode={toggleDarkMode}
               sidebarOpen={sidebarOpen}
             >
+              <ProtectedRoute>
               <Dashboard />
+              </ProtectedRoute>
             </Layout>
           }
         />

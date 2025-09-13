@@ -3,52 +3,63 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import "./Billing.css";
 
-function Billing() {
-  const publicKey = "pk_test_b417dfecf191ef3e208ea705abd6e487eb845789"; // Paystack test key
+function Billing({ onPaymentSuccess }) {
+  const publicKey = "pk_test_b417dfecf191ef3e208ea705abd6e487eb845789";
   const [email] = useState("peteradebayo57@gmail.com");
   const [price, setPrice] = useState(0);
   const [units, setUnits] = useState(0);
-  const [tariff] = useState(50); // ₦ per kWh
-  const [receipt, setReceipt] = useState(null); // store last bill for download
+  const [tariff] = useState(209.9);
+  const [receipt, setReceipt] = useState(null);
 
-  // Auto-calc units when price is entered
   const handlePriceChange = (e) => {
     const enteredPrice = parseInt(e.target.value) || 0;
     setPrice(enteredPrice);
     setUnits(enteredPrice / tariff);
   };
 
-  // Trigger Paystack payment
   const payWithPaystack = () => {
+    if (!window.PaystackPop) return alert("Payment service not available");
+
     const handler = window.PaystackPop.setup({
       key: publicKey,
-      email,
-      amount: price * 100, // convert to kobo
+      email: String(email),
+      amount: Number(price) * 100,
       currency: "NGN",
-      callback: function (response) {
-        alert("Payment Successful ✅ " + response.reference);
+      callback: (response) => {
         const newBill = {
           id: Date.now(),
           date: new Date().toISOString().split("T")[0],
+          email,
           units,
           tariff,
           amount: price,
           status: "Paid",
           reference: response.reference,
         };
+
         setReceipt(newBill);
-        generateReceipt(newBill); // auto-generate immediately
+        generateReceipt(newBill);
         setPrice(0);
         setUnits(0);
+
+fetch("https://smart-server-i0ah.onrender.com/api/billing", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(newBill),
+})
+  .then((res) => res.json())
+  .then((data) => {
+    console.log("Billing saved ✅", data);
+    if (onPaymentSuccess) onPaymentSuccess(); // refresh dashboard instantly
+  })
+  .catch((err) => console.error("Error saving billing:", err));
       },
-      onClose: function () {
-        alert("Transaction closed ❌");
-      },
+      onClose: () => alert("Transaction closed ❌"),
     });
+
     handler.openIframe();
   };
 
-  // Generate Receipt PDF
   const generateReceipt = (bill) => {
     try {
       const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -76,7 +87,6 @@ function Billing() {
 
   return (
     <div className="billing-page">
-      {/* Billing Form */}
       <div className="billing-form">
         <h3>Purchase Electricity</h3>
         <div className="form-group">
@@ -92,43 +102,19 @@ function Billing() {
           <label>Units (kWh):</label>
           <input type="text" value={units.toFixed(2)} readOnly />
         </div>
-        <button
-          className="pay-btn"
-          onClick={payWithPaystack}
-          disabled={price <= 0}
-        >
+        <button className="pay-btn" onClick={payWithPaystack} disabled={price <= 0}>
           Pay ₦{price}
         </button>
       </div>
 
-      {/* Receipt Section */}
       {receipt && (
         <div className="receipt-section">
           <h3>Last Transaction</h3>
-          <p>
-            Date: <strong>{receipt.date}</strong>
-          </p>
-          <p>
-            Units: <strong>{receipt.units.toFixed(2)} kWh</strong>
-          </p>
-          <p>
-            Amount: <strong>₦{receipt.amount}</strong>
-          </p>
-          <p>
-            Status:{" "}
-            <strong
-              style={{
-                color: receipt.status === "Paid" ? "green" : "red",
-              }}
-            >
-              {receipt.status}
-            </strong>
-          </p>
-          <button
-            type="button"
-            className="download-btn"
-            onClick={() => generateReceipt(receipt)}
-          >
+          <p>Date: <strong>{receipt.date}</strong></p>
+          <p>Units: <strong>{receipt.units.toFixed(2)} kWh</strong></p>
+          <p>Amount: <strong>₦{receipt.amount}</strong></p>
+          <p>Status: <strong style={{ color: receipt.status === "Paid" ? "green" : "red" }}>{receipt.status}</strong></p>
+          <button type="button" className="download-btn" onClick={() => generateReceipt(receipt)}>
             ⬇ Download Receipt
           </button>
         </div>
