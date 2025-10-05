@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Settings.css";
 
 const Settings = () => {
@@ -9,7 +9,20 @@ const Settings = () => {
     state: "",
     town: "",
     email: "",
+    meterId: "",
   });
+
+  // Load saved settings on mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem("userSettings");
+    if (savedSettings) {
+      setFormData(JSON.parse(savedSettings));
+    } else {
+      // generate permanent meterId if none
+      const randomId = "MTR-" + Math.floor(10000 + Math.random() * 90000);
+      setFormData((prev) => ({ ...prev, meterId: randomId }));
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,10 +32,29 @@ const Settings = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Profile updated successfully ✅");
-    // Later: send to backend API
+
+    // Save to localStorage
+    localStorage.setItem("userSettings", JSON.stringify(formData));
+
+    // Send settings to backend
+    try {
+      const res = await fetch("http://localhost:5000/api/alert/update-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Profile updated successfully ✅");
+      } else {
+        alert("Failed to update profile on server.");
+      }
+    } catch (err) {
+      console.error("Error updating settings:", err);
+      alert("Error connecting to server.");
+    }
   };
 
   return (
@@ -35,7 +67,6 @@ const Settings = () => {
             <input
               type="text"
               name="name"
-              placeholder="Enter your full name"
               value={formData.name}
               onChange={handleChange}
               required
@@ -47,7 +78,6 @@ const Settings = () => {
             <input
               type="tel"
               name="phone"
-              placeholder="Enter your phone number"
               value={formData.phone}
               onChange={handleChange}
               required
@@ -60,7 +90,6 @@ const Settings = () => {
               <input
                 type="text"
                 name="country"
-                placeholder="Enter your country"
                 value={formData.country}
                 onChange={handleChange}
                 required
@@ -71,7 +100,6 @@ const Settings = () => {
               <input
                 type="text"
                 name="state"
-                placeholder="Enter your state"
                 value={formData.state}
                 onChange={handleChange}
                 required
@@ -84,7 +112,6 @@ const Settings = () => {
             <input
               type="text"
               name="town"
-              placeholder="Enter your town"
               value={formData.town}
               onChange={handleChange}
               required
@@ -96,11 +123,15 @@ const Settings = () => {
             <input
               type="email"
               name="email"
-              placeholder="Enter your email"
               value={formData.email}
               onChange={handleChange}
               required
             />
+          </div>
+
+          <div className="form-group">
+            <label>Meter ID</label>
+            <input type="text" name="meterId" value={formData.meterId} disabled />
           </div>
 
           <button type="submit" className="save-btn">

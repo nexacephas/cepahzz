@@ -125,3 +125,19 @@
     margin-left: 70px; /* when collapsed */
   }
 }
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 220px;
+  }
+
+  /* OPEN state */
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* COLLAPSED or default state */
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+  }
+}

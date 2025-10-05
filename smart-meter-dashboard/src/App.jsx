@@ -12,7 +12,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 function Layout({ children, toggleSidebar, darkMode, toggleDarkMode, sidebarOpen }) {
   return (
     <div className="app-container">
-      <Sidebar isOpen={sidebarOpen} />
+      <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
       <div className="main-content">
         <Navbar
           toggleSidebar={toggleSidebar}
@@ -27,7 +27,7 @@ function Layout({ children, toggleSidebar, darkMode, toggleDarkMode, sidebarOpen
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768); // open by default on desktop
 
   useEffect(() => {
     document.documentElement.setAttribute(
@@ -36,20 +36,32 @@ function App() {
     );
   }, [darkMode]);
 
-  const toggleDarkMode = () => setDarkMode((prev) => !prev);
-  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  // Update sidebarOpen on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) setSidebarOpen(false);
+      else setSidebarOpen(true);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const toggleDarkMode = () => setDarkMode(prev => !prev);
+
+  // Accept optional boolean to explicitly open/close sidebar
+  const toggleSidebar = (state) => {
+    if (typeof state === "boolean") setSidebarOpen(state);
+    else setSidebarOpen(prev => !prev);
+  };
 
   return (
     <Router>
       <Routes>
-        {/* Auth page (NO layout) */}
         <Route path="/auth" element={<Auth />} />
 
-        {/* Dashboard pages (WITH layout) */}
         <Route
           path="/dashboard"
           element={
-
             <Layout
               toggleSidebar={toggleSidebar}
               darkMode={darkMode}
@@ -57,11 +69,12 @@ function App() {
               sidebarOpen={sidebarOpen}
             >
               <ProtectedRoute>
-              <Dashboard />
+                <Dashboard />
               </ProtectedRoute>
             </Layout>
           }
         />
+
         <Route
           path="/billing"
           element={
@@ -75,6 +88,7 @@ function App() {
             </Layout>
           }
         />
+
         <Route
           path="/history"
           element={
@@ -88,6 +102,7 @@ function App() {
             </Layout>
           }
         />
+
         <Route
           path="/settings"
           element={
@@ -102,7 +117,6 @@ function App() {
           }
         />
 
-        {/* Default route */}
         <Route path="/" element={<Navigate to="/dashboard" />} />
         <Route path="*" element={<h1>404 - Page Not Found</h1>} />
       </Routes>

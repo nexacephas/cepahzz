@@ -1,26 +1,17 @@
 import React, { useEffect, useState } from "react";
 import {
-  FaBolt,
-  FaTachometerAlt,
-  FaCloud,
-  FaChartBar,
-  FaBatteryHalf,
-  FaBalanceScale,
-  FaWallet,
-  FaShieldAlt,
-  FaExclamationTriangle,
+  FaBolt, FaTachometerAlt, FaCloud, FaChartBar,
+  FaBatteryHalf, FaBalanceScale, FaWallet,
+  FaShieldAlt, FaExclamationTriangle
 } from "react-icons/fa";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Brush
 } from "recharts";
+
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, onValue, push } from "firebase/database";
+import { toast, ToastContainer } from "react-toastify";   // ✅ Toastify import
+import "react-toastify/dist/ReactToastify.css";           // ✅ Toastify styles
 import "./Dashboard.css";
 import ChatBot from "../ChatBot/ChatBot";
 
@@ -46,6 +37,7 @@ function Dashboard() {
   const [unitCountdown, setUnitCountdown] = useState(0);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [theftAlertSent, setTheftAlertSent] = useState(false);
 
   // Safely render stats
   const renderValue = (value, unit = "") => {
@@ -53,7 +45,84 @@ function Dashboard() {
     return `${value} ${unit}`;
   };
 
-  // Fetch stats and billing from backend
+  // --- Theft Alerts (SMS + Telegram) ---
+  useEffect(() => {
+    const sendTheftAlertSMS = async (alertMessage) => {
+      try {
+        const res = await fetch("http://localhost:5000/api/alert/send-sms", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: "+2348131495622", // ✅ Hardcoded number
+            text: alertMessage,
+          }),
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          console.log("✅ Theft alert SMS sent");
+          setTheftAlertSent(true);
+          toast.success("🚨 Theft Alert SMS Sent!"); // ✅ Toastify instead of alert
+        }
+      } catch (err) {
+        console.error("SMS error:", err);
+        toast.error("❌ SMS Alert Failed!");
+      }
+    };
+
+    const sendTheftAlertTelegram = async (alertMessage) => {
+      try {
+        const res = await fetch("http://localhost:5000/api/alert/send-telegram", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            meterId: stats?.meter_id || "Unknown",
+            location: getUserLocation(),
+            time: new Date().toLocaleString("en-GB", { hour12: false }),
+            status: "Tampering Detected",
+          }),
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          console.log("✅ Telegram alert sent");
+          toast.info("🚨 Theft Alert sent to Telegram!"); // ✅ Toastify instead of alert
+        }
+      } catch (err) {
+        console.error("Telegram error:", err);
+        toast.error("❌ Telegram Alert Failed!");
+      }
+    };
+
+    if (stats?.theft_detected && !theftAlertSent) {
+      const alertMessage = `
+🚨 Theft Detection Alert!
+
+📟 Meter ID: ${stats?.meter_id || "Unknown"}
+📍 Location: ${getUserLocation()}
+⏰ Time: ${new Date().toLocaleString("en-GB", { hour12: false })}
+⚡ Status: Tampering Detected
+      `;
+
+      sendTheftAlertSMS(alertMessage);
+      sendTheftAlertTelegram(alertMessage);
+    }
+
+    if (!stats?.theft_detected && theftAlertSent) {
+      setTheftAlertSent(false);
+    }
+  }, [stats?.theft_detected, theftAlertSent]);
+
+  // --- Helper: Get saved location from Settings ---
+  const getUserLocation = () => {
+    const profile = JSON.parse(localStorage.getItem("userSettings")) || {};
+    if (profile.town && profile.state && profile.country) {
+      return `${profile.town}, ${profile.state}, ${profile.country}`;
+    }
+    return "Unknown Location";
+  };
+
+  // Fetch stats and billing
   const fetchStats = async () => {
     try {
       setLoading(true);
@@ -61,7 +130,7 @@ function Dashboard() {
       const statsData = await statsRes.json();
       setStats(statsData);
 
-      const billingRes = await fetch("https://smart-server-i0ah.onrender.com/api/billing/latest")
+      const billingRes = await fetch("https://smart-server-i0ah.onrender.com/api/billing/latest");
       const billingData = await billingRes.json();
       setLatestBilling(billingData);
 
@@ -69,7 +138,6 @@ function Dashboard() {
         setUnitCountdown(Math.max(billingData.units - statsData.energy, 0));
       }
 
-      // Optionally push energy to Firebase for chart
       if (statsData.energy && !isNaN(statsData.energy)) {
         push(ref(db, "hardwareData/chart/energy"), {
           value: statsData.energy,
@@ -83,14 +151,14 @@ function Dashboard() {
     }
   };
 
-  // Initial fetch & polling every 5s for stats/billing
+  // Polling
   useEffect(() => {
     fetchStats();
-    const interval = setInterval(fetchStats, 300); 
+    const interval = setInterval(fetchStats, 3000);
     return () => clearInterval(interval);
   }, []);
 
-  // Listen to real-time chart updates from Firebase
+  // Listen to Firebase chart data
   useEffect(() => {
     const energyRef = ref(db, "hardwareData/chart/energy");
     const unsubscribe = onValue(energyRef, (snapshot) => {
@@ -100,13 +168,12 @@ function Dashboard() {
         energy: val.value,
       }));
       arrayData.sort((a, b) => new Date(a.time) - new Date(b.time));
-      setChartData(arrayData.slice(-50));
+      setChartData(arrayData.slice(-100)); // ✅ show more data points
     });
-
     return () => unsubscribe();
   }, []);
 
-  // Live unit countdown simulation
+  // Countdown simulation
   useEffect(() => {
     if (!latestBilling) return;
     const consumptionRate = 0.01; // kWh per second
@@ -143,54 +210,34 @@ function Dashboard() {
 
       {/* Stats Grid */}
       <div className="stats-grid">
-        <div className="stats-card">
-          <div className="icon"><FaBolt /></div>
-          <div className="info"><h4>Voltage</h4><p>{renderValue(stats?.voltage, "V")}</p></div>
-        </div>
-        <div className="stats-card">
-          <div className="icon"><FaTachometerAlt /></div>
-          <div className="info"><h4>Current</h4><p>{renderValue(stats?.current || stats?.ct_current, "A")}</p></div>
-        </div>
-        <div className="stats-card">
-          <div className="icon"><FaChartBar /></div>
-          <div className="info"><h4>Power</h4><p>{renderValue(stats?.power, "W")}</p></div>
-        </div>
-        <div className="stats-card">
-          <div className="icon"><FaCloud /></div>
-          <div className="info"><h4>Frequency</h4><p>{renderValue(stats?.frequency, "Hz")}</p></div>
-        </div>
-        <div className="stats-card">
-          <div className="icon"><FaBatteryHalf /></div>
-          <div className="info"><h4>Energy</h4><p>{renderValue(stats?.energy, "kWh")}</p></div>
-        </div>
-        <div className="stats-card">
-          <div className="icon"><FaBalanceScale /></div>
-          <div className="info"><h4>Power Factor</h4><p>{renderValue(stats?.power_factor)}</p></div>
-        </div>
-        <div className="stats-card">
-          <div className="icon">{stats?.tamper_detected ? <FaExclamationTriangle color="red"/> : <FaShieldAlt color="green"/>}</div>
-          <div className="info"><h4>Tamper</h4><p>{stats?.tamper_detected ? "Detected" : "Safe"}</p></div>
-        </div>
-        <div className="stats-card">
-          <div className="icon">{stats?.theft_detected ? <FaExclamationTriangle color="red"/> : <FaShieldAlt color="green"/>}</div>
-          <div className="info"><h4>Theft</h4><p>{stats?.theft_detected ? "Detected" : "Safe"}</p></div>
-        </div>
+        <div className="stats-card"><div className="icon"><FaBolt /></div><div className="info"><h4>Voltage</h4><p>{renderValue(stats?.voltage, "V")}</p></div></div>
+        <div className="stats-card"><div className="icon"><FaTachometerAlt /></div><div className="info"><h4>Current</h4><p>{renderValue(stats?.current || stats?.ct_current, "A")}</p></div></div>
+        <div className="stats-card"><div className="icon"><FaChartBar /></div><div className="info"><h4>Power</h4><p>{renderValue(stats?.power, "W")}</p></div></div>
+        <div className="stats-card"><div className="icon"><FaCloud /></div><div className="info"><h4>Frequency</h4><p>{renderValue(stats?.frequency, "Hz")}</p></div></div>
+        <div className="stats-card"><div className="icon"><FaBatteryHalf /></div><div className="info"><h4>Energy</h4><p>{renderValue(stats?.energy, "kWh")}</p></div></div>
+        <div className="stats-card"><div className="icon"><FaBalanceScale /></div><div className="info"><h4>Power Factor</h4><p>{renderValue(stats?.power_factor)}</p></div></div>
+        <div className="stats-card"><div className="icon">{stats?.tamper_detected ? <FaExclamationTriangle color="red"/> : <FaShieldAlt color="green"/>}</div><div className="info"><h4>Tamper</h4><p>{stats?.tamper_detected ? "Detected" : "Safe"}</p></div></div>
+        <div className="stats-card"><div className="icon">{stats?.theft_detected ? <FaExclamationTriangle color="red"/> : <FaShieldAlt color="green"/>}</div><div className="info"><h4>Theft</h4><p>{stats?.theft_detected ? "Detected" : "Safe"}</p></div></div>
       </div>
 
       {/* Energy Chart */}
       <div className="chart-container">
         <h3>Energy Consumption (kWh vs Time)</h3>
-        <ResponsiveContainer width="100%" height={350}>
+        <ResponsiveContainer width="100%" height={400}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="time" />
             <YAxis label={{ value: "Energy (kWh)", angle: -90, position: "insideLeft" }} />
             <Tooltip />
             <Line type="monotone" dataKey="energy" stroke="#4f46e5" strokeWidth={2} dot={false} isAnimationActive={false} />
+            <Brush dataKey="time" height={30} stroke="#4f46e5" /> {/* ✅ Zoom/scroll */}
           </LineChart>
         </ResponsiveContainer>
         <ChatBot />
       </div>
+
+      {/* Toastify container */}
+      <ToastContainer position="top-right" autoClose={4000} />
     </div>
   );
 }
