@@ -21,8 +21,10 @@ function ChatBot() {
     setIsTyping(true);
 
     try {
-      const res = axios.post("https://smart-server-i0ah.onrender.com/api/ai-chat", { message: input });
-      // const res = axios.post("http://localhost:5000/api/ai-chat", { message: input }); // local dev
+      // ✅ Updated to your Render backend URL
+      const res = await axios.post("https://smart-server-i0ah.onrender.com/api/ai-chat", {
+        message: input,
+      });
 
       // Small delay for realism
       setTimeout(() => {

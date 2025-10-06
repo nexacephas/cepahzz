@@ -25,7 +25,8 @@ const History = () => {
   const [loading, setLoading] = useState(true);
 
   // ✅ Use deployed backend base URL
-  const API_BASE = "https://smart-server-i0ah.onrender.com";
+const API_BASE = "https://smart-server-1-71nx.onrender.com";
+
 
   const fetchData = async () => {
     try {

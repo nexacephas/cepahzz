@@ -10,8 +10,8 @@ import {
 
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, onValue, push } from "firebase/database";
-import { toast, ToastContainer } from "react-toastify";   // ✅ Toastify import
-import "react-toastify/dist/ReactToastify.css";           // ✅ Toastify styles
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./Dashboard.css";
 import ChatBot from "../ChatBot/ChatBot";
 
@@ -20,7 +20,7 @@ const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
   databaseURL: "https://smart-meter-2025-c7b32-default-rtdb.firebaseio.com/",
-  projectId: "smart-meter-2025-c7b32",
+  projectId: "smart-meter-2025",
   storageBucket: "YOUR_PROJECT.appspot.com",
   messagingSenderId: "YOUR_SENDER_ID",
   appId: "YOUR_APP_ID",
@@ -28,6 +28,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+// ✅ Use Render base URL for all requests
+const BASE_URL = "https://smart-server-i0ah.onrender.com";
 
 function Dashboard() {
   const RATE = 209.9; // ₦ per kWh
@@ -39,7 +42,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [theftAlertSent, setTheftAlertSent] = useState(false);
 
-  // Safely render stats
+  // Helper to render safe values
   const renderValue = (value, unit = "") => {
     if (value === null || value === undefined || isNaN(value)) return "-";
     return `${value} ${unit}`;
@@ -49,11 +52,11 @@ function Dashboard() {
   useEffect(() => {
     const sendTheftAlertSMS = async (alertMessage) => {
       try {
-        const res = await fetch("http://localhost:5000/api/alert/send-sms", {
+        const res = await fetch(`${BASE_URL}/api/alert/send-sms`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            phone: "+2348131495622", // ✅ Hardcoded number
+            phone: "+2348131495622",
             text: alertMessage,
           }),
         });
@@ -62,7 +65,7 @@ function Dashboard() {
         if (data.success) {
           console.log("✅ Theft alert SMS sent");
           setTheftAlertSent(true);
-          toast.success("🚨 Theft Alert SMS Sent!"); // ✅ Toastify instead of alert
+          toast.success("🚨 Theft Alert SMS Sent!");
         }
       } catch (err) {
         console.error("SMS error:", err);
@@ -72,7 +75,7 @@ function Dashboard() {
 
     const sendTheftAlertTelegram = async (alertMessage) => {
       try {
-        const res = await fetch("http://localhost:5000/api/alert/send-telegram", {
+        const res = await fetch(`${BASE_URL}/api/alert/send-telegram`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -86,7 +89,7 @@ function Dashboard() {
         const data = await res.json();
         if (data.success) {
           console.log("✅ Telegram alert sent");
-          toast.info("🚨 Theft Alert sent to Telegram!"); // ✅ Toastify instead of alert
+          toast.info("🚨 Theft Alert sent to Telegram!");
         }
       } catch (err) {
         console.error("Telegram error:", err);
@@ -126,11 +129,11 @@ function Dashboard() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const statsRes = await fetch("https://smart-server-i0ah.onrender.com/api/stats");
+      const statsRes = await fetch(`${BASE_URL}/api/stats`);
       const statsData = await statsRes.json();
       setStats(statsData);
 
-      const billingRes = await fetch("https://smart-server-i0ah.onrender.com/api/billing/latest");
+      const billingRes = await fetch(`${BASE_URL}/api/billing/latest`);
       const billingData = await billingRes.json();
       setLatestBilling(billingData);
 
@@ -168,7 +171,7 @@ function Dashboard() {
         energy: val.value,
       }));
       arrayData.sort((a, b) => new Date(a.time) - new Date(b.time));
-      setChartData(arrayData.slice(-100)); // ✅ show more data points
+      setChartData(arrayData.slice(-100));
     });
     return () => unsubscribe();
   }, []);
@@ -230,13 +233,12 @@ function Dashboard() {
             <YAxis label={{ value: "Energy (kWh)", angle: -90, position: "insideLeft" }} />
             <Tooltip />
             <Line type="monotone" dataKey="energy" stroke="#4f46e5" strokeWidth={2} dot={false} isAnimationActive={false} />
-            <Brush dataKey="time" height={30} stroke="#4f46e5" /> {/* ✅ Zoom/scroll */}
+            <Brush dataKey="time" height={30} stroke="#4f46e5" />
           </LineChart>
         </ResponsiveContainer>
         <ChatBot />
       </div>
 
-      {/* Toastify container */}
       <ToastContainer position="top-right" autoClose={4000} />
     </div>
   );

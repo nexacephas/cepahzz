@@ -7,13 +7,17 @@ function Navbar({ toggleSidebar }) {
 
   // Generate random meter ID if not present
   const randomMeterId = "MTR" + Math.floor(10000 + Math.random() * 90000);
-  const user = storedUser
-    ? { ...storedUser.user, meterId: storedUser.user.meterId || randomMeterId, email: storedUser.user.email || "user@example.com" }
-    : { meterId: randomMeterId, email: "user@example.com" };
+
+  const userData =
+    storedUser?.user || storedUser || {}; // <-- handle both cases
+
+  const user = {
+    meterId: userData.meterId || randomMeterId,
+    email: userData.email || "user@example.com",
+  };
 
   return (
     <nav className="navbar">
-      {/* Left: Hamburger + Title */}
       <div className="navbar-left">
         <button
           className="navbar-btn"
@@ -25,7 +29,6 @@ function Navbar({ toggleSidebar }) {
         <h1 className="navbar-title">Smart Meter Dashboard</h1>
       </div>
 
-      {/* Right: User info */}
       {user && (
         <div className="navbar-right">
           <span className="meter-id">Meter ID: {user.meterId}</span>

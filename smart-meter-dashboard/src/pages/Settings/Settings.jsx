@@ -12,6 +12,10 @@ const Settings = () => {
     meterId: "",
   });
 
+  // ✅ Use deployed backend base URL (fallback to localhost)
+  const API_BASE =
+    import.meta.env.VITE_API_URL || "https://smart-server-1-71nx.onrender.com";
+
   // Load saved settings on mount
   useEffect(() => {
     const savedSettings = localStorage.getItem("userSettings");
@@ -35,25 +39,25 @@ const Settings = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Save to localStorage
+    // Save to localStorage immediately
     localStorage.setItem("userSettings", JSON.stringify(formData));
 
-    // Send settings to backend
     try {
-      const res = await fetch("http://localhost:5000/api/alert/update-settings", {
+      const res = await fetch(`${API_BASE}/api/alert/update-settings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         alert("Profile updated successfully ✅");
       } else {
-        alert("Failed to update profile on server.");
+        alert("Failed to update profile on server ❌");
       }
     } catch (err) {
       console.error("Error updating settings:", err);
-      alert("Error connecting to server.");
+      alert("Error connecting to server. Please check your network.");
     }
   };
 

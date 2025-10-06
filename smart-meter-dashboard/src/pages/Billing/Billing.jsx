@@ -42,7 +42,7 @@ function Billing({ onPaymentSuccess }) {
         setPrice(0);
         setUnits(0);
 
-fetch("https://smart-server-i0ah.onrender.com/api/billing", {
+fetch("https://smart-server-1-71nx.onrender.com/api/billing", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify(newBill),
@@ -53,6 +53,7 @@ fetch("https://smart-server-i0ah.onrender.com/api/billing", {
     if (onPaymentSuccess) onPaymentSuccess(); // refresh dashboard instantly
   })
   .catch((err) => console.error("Error saving billing:", err));
+
       },
       onClose: () => alert("Transaction closed ❌"),
     });
