@@ -8,7 +8,7 @@ function Navbar({ toggleSidebar }) {
   const userData = storedUser?.user || storedUser || {};
 
   const user = {
-    meterId: "MT-001", // 🔥 Hardcoded meter ID
+    meterId: "MTR-001", // 🔥 Hardcoded meter ID
     email: userData.email || "user@example.com",
   };
 
