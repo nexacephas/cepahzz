@@ -1,0 +1,53 @@
+/* Default theme variables */
+:root {
+  --bg-color: #f9f9f9;
+  --card-bg: #ffffff;
+  --text-color: #222;
+  --primary-color: #2575fc;
+  --primary-hover: #1a5fd0;
+  --border-color: #ddd;
+}
+
+/* Dark theme variables */
+[data-theme="dark"] {
+  --bg-color: #1e1e2f;
+  --card-bg: #2a2a40;
+  --text-color: #f1f1f1;
+  --primary-color: #6a11cb;
+  --primary-hover: #5310a5;
+  --border-color: #444;
+}
+
+/* Global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: all 0.3s ease;
+}
+
+/* Buttons (global) */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Inputs (global) */
+input {
+  font-family: inherit;
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 5px var(--primary-color);
+}
