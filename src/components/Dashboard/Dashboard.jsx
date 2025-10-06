@@ -101,7 +101,7 @@ function Dashboard() {
       const alertMessage = `
 🚨 Theft Detection Alert!
 
-📟 Meter ID: ${stats?.meter_id || "Unknown"}
+📟 Meter ID: MTR-001
 📍 Location: ${getUserLocation()}
 ⏰ Time: ${new Date().toLocaleString("en-GB", { hour12: false })}
 ⚡ Status: Tampering Detected
