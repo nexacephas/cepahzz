@@ -1,17 +1,45 @@
+# ⚡ Smart Meter Dashboard
 
-"# cepahzz"    # Creates a README file with title "cepahzz"
-=======
-# React + Vite
+## Full-Stack IoT Monitoring Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Tech Stack:** MERN (MongoDB, Express, React, Node.js) | Tailwind CSS | IoT Integration
 
-Currently, two official plugins are available:
+### 🎯 Overview
+This project is a real-time IoT (Internet of Things) dashboard engineered to monitor hardware prototype readings. It processes data streams from embedded devices, providing users with live data visualization and critical alerting mechanisms.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### ✨ Key Features
+* **Real-Time Data Flow:** Architected a robust REST API using **Node.js/Express** to handle data ingestion and visualize readings in real-time with **sub-second latency**.
+* **Secure Payment Gateway:** Implemented automated billing through a secure payment gateway for efficient client invoicing.
+* **Critical Alerts:** Developed an **SMS notification system** for immediate theft detection and proactive hardware monitoring.
+* **Scalable Architecture:** Used **MongoDB** for flexible data storage and aggregation of historical metrics.
+* **Modern UI:** Built a highly responsive and data-dense user interface using **React** and **Tailwind CSS**.
 
-```
-Expanding the ESLint configuration
+### 🔗 Live Demo & Links
+| Type | URL |
+| Live Application | https://cepahzz-zo63.vercel.app/ |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
->>>>>>> 6924293 (Initial commit: frontend with SPA routing and vercel.json)
+### ⚙️ Local Installation
+To get a copy of the project running locally for development and testing:
+
+1.  **Clone the Repository:**
+    ```bash
+    git clone [https://github.com/YourUsername/smart-meter-dashboard.git](https://github.com/YourUsername/smart-meter-dashboard.git)
+    cd smart-meter-dashboard
+    ```
+
+2.  **Install Dependencies (Client & Server):**
+    ```bash
+    npm install  # Install server dependencies
+    cd client && npm install  # Install React dependencies
+    ```
+
+3.  **Setup Environment Variables:**
+    Create a `.env` file in the root directory and add your connection strings (e.g., `MONGO_URI`, `STRIPE_SECRET_KEY`, etc.).
+
+4.  **Run the Project:**
+    ```bash
+    npm start # Or your custom script to run both client and server
+    ```
+
+### 🤝 Contributions
+If you are interested in extending this project, please open an issue or submit a pull request!
